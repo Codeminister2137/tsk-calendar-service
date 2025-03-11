@@ -1,0 +1,19 @@
+[project]
+name = "tsk-calendar-service"
+version = "0.1.0"
+description = "Calendar service for the Task Scheduler project"
+authors = [
+    {name = "Codeminister2137",email = "kubajaworski99@wp.pl"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "django (>=5.1.7,<6.0.0)",
+    "django-admin (>=2.0.2,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
