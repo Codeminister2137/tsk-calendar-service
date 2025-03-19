@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "django (>=5.1.7,<6.0.0)",
-    "django-admin (>=2.0.2,<3.0.0)"
+    "django-admin (>=2.0.2,<3.0.0)",
+    "pytest (>=8.3.5,<9.0.0)"
 ]
 
 
