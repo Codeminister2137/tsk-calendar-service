@@ -1,13 +1,10 @@
-from enum import Enum
-from unittest import case
-
-from django.db import models
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Literal
-from datetime import datetime, timedelta
-from collections import defaultdict
 import inspect
-import itertools
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Dict, List, Literal, Optional
+
 
 @dataclass()
 class Category:
@@ -34,13 +31,17 @@ class Task:
 
     def __str__(self):
         return self.name
+
     def __repr__(self):
         return f"Task({self.name})"
+
     @classmethod
     def get_attribute_tuple(cls):
-        return tuple(attribute for attribute in dir(cls) if not callable(getattr(cls, attribute)) and not attribute.startswith("__"))
-
-
+        return tuple(
+            attribute
+            for attribute in dir(cls)
+            if not callable(getattr(cls, attribute)) and not attribute.startswith("__")
+        )
 
 
 class Calendar:
@@ -78,17 +79,24 @@ class Calendar:
         return max(tasks, key=lambda task: task.priority, default=None)
 
     @staticmethod
-    def order_by_attribute(tasks: List[Task],mode: str, reverse=True) -> List[Task]:
+    def order_by_attribute(tasks: List[Task], mode: str, reverse=True) -> List[Task]:
         match mode:
             case "categories_quantity":
-                return sorted(tasks, key=lambda task: len(task.categories), reverse=reverse)
+                return sorted(
+                    tasks, key=lambda task: len(task.categories), reverse=reverse
+                )
             case "notifications_quantity":
-                return sorted(tasks, key=lambda task: len(task.notifications), reverse=reverse)
+                return sorted(
+                    tasks, key=lambda task: len(task.notifications), reverse=reverse
+                )
             case "status":
-                return sorted(tasks, key=lambda task: task.status.value, reverse=reverse)
+                return sorted(
+                    tasks, key=lambda task: task.status.value, reverse=reverse
+                )
             case _:
-                return sorted(tasks, key=lambda task: getattr(task, mode, None), reverse=reverse)
-
+                return sorted(
+                    tasks, key=lambda task: getattr(task, mode, None), reverse=reverse
+                )
 
     @staticmethod
     def group_tasks_by_status(tasks: List[Task]) -> Dict[Status, List[Task]]:
@@ -98,7 +106,9 @@ class Calendar:
         return dict(grouped_tasks)
 
     @staticmethod
-    def group_by_attribute(tasks: List[Task], mode: str, reverse=True) -> Dict[Category, List[Task]]:
+    def group_by_attribute(
+        tasks: List[Task], mode: str, reverse=True
+    ) -> Dict[Category, List[Task]]:
         grouped = defaultdict(list)
         for task in tasks:
             match mode:
@@ -109,34 +119,61 @@ class Calendar:
                     grouped[task.status].append(task)
         return grouped
 
-
-
     @staticmethod
-    def filter_tasks_by_deadline(target: datetime, tasks: List[Task], mode:Literal["day", "week", "month", "year"]) -> List[Task]:
+    def filter_tasks_by_deadline(
+        target: datetime,
+        tasks: List[Task],
+        mode: Literal["day", "week", "month", "year"],
+    ) -> List[Task]:
         match mode:
             case "day":
-                return [task for task in tasks if task.deadline and task.deadline.date() == target.date()]
+                return [
+                    task
+                    for task in tasks
+                    if task.deadline and task.deadline.date() == target.date()
+                ]
             case "week":
                 return [
-                    task for task in tasks
-                    if task.deadline and task.deadline.isocalendar()[0] == target.isocalendar()[0]
-                       and task.deadline.isocalendar()[1] == target.isocalendar()[1]
+                    task
+                    for task in tasks
+                    if task.deadline
+                    and task.deadline.isocalendar()[0] == target.isocalendar()[0]
+                    and task.deadline.isocalendar()[1] == target.isocalendar()[1]
                 ]
             case "month":
                 return [
-                    task for task in tasks
-                    if task.deadline and task.deadline.year == target.year
-                       and task.deadline.month == target.month
+                    task
+                    for task in tasks
+                    if task.deadline
+                    and task.deadline.year == target.year
+                    and task.deadline.month == target.month
                 ]
             case "year":
-                return [task for task in tasks if task.deadline and task.deadline.year == target.year]
+                return [
+                    task
+                    for task in tasks
+                    if task.deadline and task.deadline.year == target.year
+                ]
             case _:
-                raise Exception(f"{inspect.currentframe().f_code.co_name} Unknown mode: {mode}")
+                raise Exception(
+                    f"{inspect.currentframe().f_code.co_name} Unknown mode: {mode}"
+                )
+
 
 if __name__ == "__main__":
     calendar = Calendar()
-    task1 = Task(name="Task 1", expected_duration=timedelta(hours=1), deadline=datetime.now())
-    task2 = Task(name="Task 2", expected_duration=timedelta(hours=2), deadline=datetime(2025, 3, 31))
+    task1 = Task(
+        name="Task 1", expected_duration=timedelta(hours=1), deadline=datetime.now()
+    )
+    task2 = Task(
+        name="Task 2",
+        expected_duration=timedelta(hours=2),
+        deadline=datetime(2025, 3, 31),
+    )
     calendar.add_task(task1)
     calendar.add_task(task2)
-    print(calendar.filter_tasks_by_deadline(target=datetime.now(), tasks=calendar.tasks, mode="monthh"))
+    print(
+        calendar.filter_tasks_by_deadline(
+            target=datetime.now(), tasks=calendar.tasks, mode="monthh"
+        )
+    )
