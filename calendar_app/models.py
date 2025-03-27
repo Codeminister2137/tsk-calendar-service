@@ -1,9 +1,8 @@
-import inspect
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass()
@@ -99,65 +98,83 @@ class Calendar:
                 )
 
     @staticmethod
-    def group_tasks_by_status(tasks: List[Task]) -> Dict[Status, List[Task]]:
-        grouped_tasks = defaultdict(list)
-        for task in tasks:
-            grouped_tasks[task.status].append(task)
-        return dict(grouped_tasks)
-
-    @staticmethod
-    def group_by_attribute(
-        tasks: List[Task], mode: str, reverse=True
-    ) -> Dict[Category, List[Task]]:
+    def group_by_attribute(tasks: List[Task], mode: str) -> Dict[str, List[Task]]:
         grouped = defaultdict(list)
+
         for task in tasks:
             match mode:
                 case "category":
-                    for category in task.categories:
+                    for category in task.categories or []:
                         grouped[category.name].append(task)
                 case "status":
-                    grouped[task.status].append(task)
+                    grouped[task.status.name].append(task)
+                case "priority":
+                    grouped[task.priority].append(task)
+                case "deadline":
+                    grouped[task.deadline.date()].append(task)
+                case "categories_quantity":
+                    grouped[len(task.categories or [])].append(task)
+                case "notifications_quantity":
+                    grouped[len(task.notifications or [])].append(task)
+                case _:
+                    # Default case: Attempt to group by any valid task attribute
+                    if hasattr(task, mode):
+                        grouped[getattr(task, mode)].append(task)
+                    else:
+                        raise ValueError(f"Unsupported group mode: {mode}")
+
         return grouped
 
     @staticmethod
-    def filter_tasks_by_deadline(
-        target: datetime,
-        tasks: List[Task],
-        mode: Literal["day", "week", "month", "year"],
-    ) -> List[Task]:
+    def filter_by_attribute(tasks: List[Task], mode: str, target) -> List[Task]:
         match mode:
-            case "day":
+            case "category":
                 return [
                     task
                     for task in tasks
-                    if task.deadline and task.deadline.date() == target.date()
+                    if any(cat.name == target for cat in task.categories or [])
                 ]
-            case "week":
+            case "categories_quantity":
+                return [task for task in tasks if len(task.categories or []) == target]
+            case "notifications_quantity":
+                return [
+                    task for task in tasks if len(task.notifications or []) == target
+                ]
+            case "deadline_day":
+                return [task for task in tasks if task.deadline.date() == target.date()]
+            case "deadline_week":
                 return [
                     task
                     for task in tasks
-                    if task.deadline
-                    and task.deadline.isocalendar()[0] == target.isocalendar()[0]
+                    if task.deadline.isocalendar()[0] == target.isocalendar()[0]
                     and task.deadline.isocalendar()[1] == target.isocalendar()[1]
                 ]
-            case "month":
+            case "deadline_month":
                 return [
                     task
                     for task in tasks
-                    if task.deadline
-                    and task.deadline.year == target.year
+                    if task.deadline.year == target.year
                     and task.deadline.month == target.month
                 ]
-            case "year":
-                return [
-                    task
-                    for task in tasks
-                    if task.deadline and task.deadline.year == target.year
-                ]
+            case "deadline_year":
+                return [task for task in tasks if task.deadline.year == target.year]
             case _:
-                raise Exception(
-                    f"{inspect.currentframe().f_code.co_name} Unknown mode: {mode}"
-                )
+                # Default case: Check if mode is a valid Task attribute and filter dynamically
+                if hasattr(tasks[0], mode):  # Ensure tasks list is not empty
+                    attr = getattr(
+                        tasks[0], mode
+                    )  # Get the first task's attribute to check type
+                    if isinstance(
+                        attr, datetime
+                    ):  # Handle datetime attributes like deadline
+                        return [
+                            task
+                            for task in tasks
+                            if getattr(task, mode).date() == target.date()
+                        ]
+                    return [task for task in tasks if getattr(task, mode) == target]
+                else:
+                    raise ValueError(f"Unsupported filter mode: {mode}")
 
 
 if __name__ == "__main__":
