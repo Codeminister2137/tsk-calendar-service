@@ -24,9 +24,6 @@ class Task:
     def __str__(self):
         return self.name
 
-    def __repr__(self):
-        return f"Task({self.name})"
-
     @classmethod
     def get_attribute_tuple(cls):
         return tuple(
@@ -34,3 +31,16 @@ class Task:
             for attribute in dir(cls)
             if not callable(getattr(cls, attribute)) and not attribute.startswith("__")
         )
+
+    def modify(self, updates: Dict[str, any]) -> None:
+        """
+        Modify the task instance by updating its attributes based on the provided dictionary of new values.
+
+        :param updates: Dictionary of attributes to update (e.g., {"name": "New Name", "priority": 1}).
+        """
+        for key, value in updates.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"Task has no attribute '{key}'")
+

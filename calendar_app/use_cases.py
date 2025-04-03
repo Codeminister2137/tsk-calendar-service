@@ -2,17 +2,14 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from .enums import Status
-from .models import Category, Task
+from calendar_app.models import Task
 
 
 class Calendar:
     def __init__(self):
         self.tasks: List[Task] = []
 
-    def add_task(self, task: Task, schedule_for: Optional[datetime] = None):
-        if schedule_for:
-            task.deadline = schedule_for
+    def add_task(self, task: Task):
         self.tasks.append(task)
 
     @staticmethod
@@ -25,16 +22,12 @@ class Calendar:
         :param updates: Dictionary of attributes to update (e.g., name="New Name", expected_duration=5).
         :return: The updated task object.
         """
-        for i, task in enumerate(tasks):
-            if id(task) == task_id:
-                for key, value in updates.items():
-                    if hasattr(task, key):
-                        setattr(task, key, value)
-                    else:
-                        raise AttributeError(f"Task has no attribute '{key}'")
-                tasks[i] = task
-                return task
-        raise ValueError("Task not found in list")
+        if len(tasks) > task_id:
+            task = tasks[task_id]
+            task.modify(updates = updates)
+            return task
+        else:
+            raise ValueError("Task not found in list")
 
     @staticmethod
     def get_most_important_task(tasks: List[Task]) -> Task:
@@ -147,7 +140,7 @@ if __name__ == "__main__":
     calendar.add_task(task1)
     calendar.add_task(task2)
     print(
-        calendar.filter_tasks_by_deadline(
-            target=datetime.now(), tasks=calendar.tasks, mode="monthh"
+        calendar.filter_by_attribute(
+            target=datetime.now(), tasks=calendar.tasks, mode="deadline_month"
         )
     )
