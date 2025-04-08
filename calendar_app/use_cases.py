@@ -13,7 +13,7 @@ class Calendar:
         self.tasks.append(task)
 
     @staticmethod
-    def modify_task(task_id: int, tasks: List[Task], **updates):
+    def modify_task(task_id: int, tasks: List[Task], updates):
         """
         Modify a task in the provided list of tasks based on its index and update the provided attributes.
 

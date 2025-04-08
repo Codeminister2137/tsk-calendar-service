@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-
+from typing import Dict, List, Union
 from .enums import Status
 
 
@@ -13,13 +12,14 @@ class Category:
 @dataclass
 class Task:
     name: str
-    expected_duration: Optional[timedelta] = None
-    actual_duration: Optional[timedelta] = None
-    categories: Optional[List[Category]] = None
+    expected_duration: timedelta | None = None
+    actual_duration: timedelta | None = None
+    categories: List[Category] | None = None
     deadline: datetime = field(default_factory=lambda: datetime.max)
     priority: int = 5
-    notifications: Optional[List[datetime]] = None
+    notifications: List[datetime] | None = None
     status: Status = Status.INIT
+
 
     def __str__(self):
         return self.name
