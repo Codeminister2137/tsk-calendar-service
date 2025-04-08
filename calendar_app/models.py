@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Dict, List, Union
+
 from .enums import Status
 
 
@@ -43,4 +44,3 @@ class Task:
                 setattr(self, key, value)
             else:
                 raise AttributeError(f"Task has no attribute '{key}'")
-

@@ -1,8 +1,9 @@
-import pytest
-from datetime import datetime, timedelta
 import random
-from calendar_app.models import Category, Status, Task
+from datetime import datetime, timedelta
 
+import pytest
+
+from calendar_app.models import Category, Status, Task
 
 example_task_list = [
         Task(
@@ -134,7 +135,3 @@ class TestModifyTask:
         updates = {"invalid_attr": "value"}
         with pytest.raises(AttributeError):
             task.modify(updates)
-
-
-
-

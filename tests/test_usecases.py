@@ -1,9 +1,12 @@
-import pytest
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
+
+import pytest
+
 from calendar_app.models import Category, Status, Task
 from calendar_app.use_cases import Calendar
 from tests.test_models import example_task_list, random_task
+
 
 @pytest.fixture
 def setup_teardown():
