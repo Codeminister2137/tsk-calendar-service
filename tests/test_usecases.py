@@ -78,9 +78,25 @@ class TestModifyTask:
         assert expected_value == actual_value
 
 class TestGetMostImportantTask:
-    def test_get_most_important_task(self, setup_teardown):
-        # Placeholder test method
-        pass
+    @pytest.fixture(autouse=True)
+    def class_setup(self, setup_teardown):
+        self.calendar, self.example_tasks = setup_teardown
+        self.tasks = self.calendar.tasks
+        for task in self.example_tasks:
+            self.calendar.add_task(task)
+        self.chosen_task_id = random.randint(0, len(self.tasks) - 1)
+        self.tasks[self.chosen_task_id].priority = 10
+
+    def test_should_return_tasks_with_highest_priority(self, setup_teardown):
+        actual_value = self.calendar.get_most_important_task(self.tasks)
+        expected_value = self.tasks[self.chosen_task_id]
+        assert actual_value == expected_value
+
+    def test_should_return_one_task(self, setup_teardown):
+        self.tasks.append(Task(name="example", priority=10))
+        actual_value = self.calendar.get_most_important_task(self.tasks)
+        assert isinstance(actual_value, Task)
+
 
 class TestOrderByAttribute:
     def test_order_by_attribute(self, setup_teardown):
