@@ -17,7 +17,7 @@ class Task:
     actual_duration: timedelta | None = None
     categories: List[Category] | None = None
     deadline: datetime = field(default_factory=lambda: datetime.max)
-    priority: int = 5
+    priority: int = 1
     notifications: List[datetime] | None = None
     status: Status = Status.INIT
 
