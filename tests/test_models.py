@@ -9,10 +9,12 @@ example_task_list = [
         Task(
             name="homework",
             expected_duration=timedelta(hours=1),
+            actual_duration=timedelta(hours=2),
             deadline=datetime(2025, 4, 25),
             priority=2,
             status=Status.INIT,
             categories=[Category(name="boring"), Category(name="short")],
+            notifications=[datetime(2025, 4, 25, 18,30), datetime(2025, 4, 24, 19,30)]
         ),
         Task(
             name="dogwalk",

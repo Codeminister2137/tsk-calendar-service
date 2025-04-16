@@ -87,7 +87,7 @@ class TestGetMostImportantTask:
         self.chosen_task_id = random.randint(0, len(self.tasks) - 1)
         self.tasks[self.chosen_task_id].priority = 10
 
-    def test_should_return_tasks_with_highest_priority(self, setup_teardown):
+    def test_should_return_task_with_highest_priority(self, setup_teardown):
         actual_value = self.calendar.get_most_important_task(self.tasks)
         expected_value = self.tasks[self.chosen_task_id]
         assert actual_value == expected_value
@@ -99,9 +99,48 @@ class TestGetMostImportantTask:
 
 
 class TestOrderByAttribute:
-    def test_order_by_attribute(self, setup_teardown):
-        # Placeholder test method
-        pass
+    @pytest.fixture(autouse=True)
+    def class_setup(self, setup_teardown):
+        self.calendar, self.example_tasks = setup_teardown
+        self.tasks = self.calendar.tasks
+        for task in self.example_tasks:
+            self.calendar.add_task(task)
+
+    def test_should_return_list_ordered_by_name(self, setup_teardown):
+        mode = "name"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.name, reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_expected_duration(self, setup_teardown):
+        mode = "expected_duration"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.expected_duration, reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_actual_duration(self, setup_teardown):
+        mode = "actual_duration"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.actual_duration, reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_deadline(self, setup_teardown):
+        mode = "deadline"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.deadline, reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_priority(self, setup_teardown):
+        mode = "priority"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.priority, reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_status(self, setup_teardown):
+        mode = "status"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.status, reverse=True)
+        assert actual_value == expected_value
 
 class TestGroupByAttribute:
     def test_group_by_attribute(self, setup_teardown):
