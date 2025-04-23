@@ -13,12 +13,12 @@ class Category:
 @dataclass
 class Task:
     name: str
-    expected_duration: timedelta | None = None
-    actual_duration: timedelta | None = None
-    categories: List[Category] | None = None
+    expected_duration: timedelta = timedelta(minutes=0)
+    actual_duration: timedelta = timedelta(minutes=0)
+    categories: List[Category] = field(default_factory=list)
     deadline: datetime = field(default_factory=lambda: datetime.max)
     priority: int = 1
-    notifications: List[datetime] | None = None
+    notifications: List[datetime] = field(default_factory=list)
     status: Status = Status.INIT
 
 

@@ -19,18 +19,25 @@ example_task_list = [
         Task(
             name="dogwalk",
             expected_duration=timedelta(hours=2),
+            actual_duration=timedelta(hours=2),
             deadline=datetime(2025, 3, 30),
             priority=3,
             status=Status.PENDING,
             categories=[Category(name="fun"), Category(name="short")],
+            notifications=[datetime(2025, 2, 25, 18,30)]
         ),
         Task(
             name="project meeting",
             expected_duration=timedelta(hours=3),
+            actual_duration=timedelta(hours=2, minutes=15),
             deadline=datetime(2025, 3, 27),
             priority=1,
             status=Status.FINISHED,
             categories=[Category(name="meeting")],
+            notifications=[datetime(2025, 2, 20, 18,30),datetime(2025, 2, 20, 18,35),datetime(2025, 2, 25, 18,40)]
+        ),
+        Task(
+            name="Empty task",
         ),
     ]
 def random_task():

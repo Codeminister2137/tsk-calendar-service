@@ -81,20 +81,19 @@ class TestGetMostImportantTask:
     @pytest.fixture(autouse=True)
     def class_setup(self, setup_teardown):
         self.calendar, self.example_tasks = setup_teardown
-        self.tasks = self.calendar.tasks
         for task in self.example_tasks:
             self.calendar.add_task(task)
-        self.chosen_task_id = random.randint(0, len(self.tasks) - 1)
-        self.tasks[self.chosen_task_id].priority = 10
+        self.chosen_task_id = random.randint(0, len(self.calendar.tasks) - 1)
+        self.calendar.tasks[self.chosen_task_id].priority = 10
 
     def test_should_return_task_with_highest_priority(self, setup_teardown):
-        actual_value = self.calendar.get_most_important_task(self.tasks)
-        expected_value = self.tasks[self.chosen_task_id]
+        actual_value = self.calendar.get_most_important_task(self.calendar.tasks)
+        expected_value = self.calendar.tasks[self.chosen_task_id]
         assert actual_value == expected_value
 
     def test_should_return_one_task(self, setup_teardown):
-        self.tasks.append(Task(name="example", priority=10))
-        actual_value = self.calendar.get_most_important_task(self.tasks)
+        self.calendar.tasks.append(Task(name="example", priority=10))
+        actual_value = self.calendar.get_most_important_task(self.calendar.tasks)
         assert isinstance(actual_value, Task)
 
 
@@ -139,13 +138,144 @@ class TestOrderByAttribute:
     def test_should_return_list_ordered_by_status(self, setup_teardown):
         mode = "status"
         actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
-        expected_value = sorted(self.example_tasks, key=lambda task: task.status, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: task.status.value, reverse=True)
         assert actual_value == expected_value
 
+    def test_should_return_list_ordered_by_categories_quantity(self, setup_teardown):
+        mode = "categories_quantity"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: len(task.categories), reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_return_list_ordered_by_notifications_quantity(self, setup_teardown):
+        mode = "notifications_quantity"
+        actual_value = self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        expected_value = sorted(self.example_tasks, key=lambda task: len(task.notifications), reverse=True)
+        assert actual_value == expected_value
+
+    def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self, setup_teardown):
+        mode = "categories"
+        with pytest.raises(ValueError):
+            self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+        mode = "notifications"
+        with pytest.raises(ValueError):
+            self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+
+    def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(self, setup_teardown):
+        random_name = random_task().name
+        mode = random_name
+        with pytest.raises(ValueError):
+            self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+
 class TestGroupByAttribute:
-    def test_group_by_attribute(self, setup_teardown):
-        # Placeholder test method
-        pass
+    @pytest.fixture(autouse=True)
+    def class_setup(self, setup_teardown):
+        self.calendar, self.example_tasks = setup_teardown
+        self.tasks = self.calendar.tasks
+        for task in self.example_tasks:
+            self.calendar.add_task(task)
+
+    def test_should_return_dictionary_grouped_by_name(self, setup_teardown):
+        mode = "name"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.name not in expected_value:
+                expected_value[task.name] = []
+            expected_value[task.name].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_expected_duration(self, setup_teardown):
+        mode = "expected_duration"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.expected_duration not in expected_value:
+                expected_value[task.expected_duration] = []
+            expected_value[task.expected_duration].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_actual_duration(self, setup_teardown):
+        mode = "actual_duration"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.actual_duration not in expected_value:
+                expected_value[task.actual_duration] = []
+            expected_value[task.actual_duration].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_deadline(self, setup_teardown):
+        mode = "deadline"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.deadline.date() not in expected_value:
+                expected_value[task.deadline.date()] = []
+            expected_value[task.deadline.date()].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_priority(self, setup_teardown):
+        mode = "priority"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.priority not in expected_value:
+                expected_value[task.priority] = []
+            expected_value[task.priority].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_status(self, setup_teardown):
+        mode = "status"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if task.status not in expected_value:
+                expected_value[task.status] = []
+            expected_value[task.status].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_categories_quantity(self, setup_teardown):
+        mode = "categories_quantity"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if len(task.categories) not in expected_value:
+                expected_value[len(task.categories)] = []
+            expected_value[len(task.categories)].append(task)
+
+        assert actual_value == expected_value
+
+    def test_should_return_dictionary_grouped_by_notifications_quantity(self, setup_teardown):
+        mode = "notifications_quantity"
+        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        expected_value = {}
+        for task in self.tasks:
+            if len(task.notifications) not in expected_value:
+                expected_value[len(task.notifications)] = []
+            expected_value[len(task.notifications)].append(task)
+
+        assert actual_value == expected_value
+
+    # def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self, setup_teardown):
+    #     mode = "categories"
+    #     with pytest.raises(ValueError):
+    #         self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+    #     mode = "notifications"
+    #     with pytest.raises(ValueError):
+    #         self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
+    #
+    # def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(self, setup_teardown):
+    #     random_name = random_task().name
+    #     mode = random_name
+    #     with pytest.raises(ValueError):
+    #         self.calendar.order_by_attribute(self.example_tasks, mode=mode, reverse=True)
 
 class TestFilterByAttribute:
     def test_filter_by_attribute(self, setup_teardown):

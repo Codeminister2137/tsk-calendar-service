@@ -48,10 +48,15 @@ class Calendar:
                 return sorted(
                     tasks, key=lambda task: task.status.value, reverse=reverse
                 )
+            case "categories" | "notifications":
+                raise ValueError(f"Unsupported order mode: {mode}")
             case _:
-                return sorted(
-                    tasks, key=lambda task: getattr(task, mode, None), reverse=reverse
-                )
+                if hasattr(tasks[0], mode):
+                    return sorted(
+                        tasks, key=lambda task: getattr(task, mode, None), reverse=reverse
+                    )
+                else:
+                    raise ValueError(f"Unsupported order mode: {mode}")
 
     @staticmethod
     def group_by_attribute(tasks: List[Task], mode: str) -> Dict[str, List[Task]]:
