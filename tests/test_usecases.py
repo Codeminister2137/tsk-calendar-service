@@ -1,13 +1,12 @@
 import copy
 import random
 from collections import defaultdict
-from datetime import datetime, timedelta
 
 import pytest
 
 from calendar_app.models import Status, Task
 from calendar_app.use_cases import Calendar
-from tests.test_models import example_task_list, random_task
+from tests.conf import example_task_list, random_task
 
 
 @pytest.fixture
