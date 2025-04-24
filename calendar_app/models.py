@@ -16,7 +16,6 @@ class Task:
     notifications: List[datetime] = field(default_factory=list)
     status: Status = Status.INIT
 
-
     def __str__(self):
         return self.name
 

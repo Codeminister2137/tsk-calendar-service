@@ -14,7 +14,6 @@ def setup_teardown():
     del example_tasks
 
 
-
 class TestModifyTask:
     def test_modify_task_name(self, setup_teardown):
         task = random_task()

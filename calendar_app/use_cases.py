@@ -24,7 +24,7 @@ class Calendar:
         """
         if len(tasks) > task_id:
             task = tasks[task_id]
-            task.modify(updates = updates)
+            task.modify(updates=updates)
             return task
         else:
             raise ValueError("Task not found in list")
@@ -53,7 +53,9 @@ class Calendar:
             case _:
                 if hasattr(tasks[0], mode):
                     return sorted(
-                        tasks, key=lambda task: getattr(task, mode, None), reverse=reverse
+                        tasks,
+                        key=lambda task: getattr(task, mode, None),
+                        reverse=reverse,
                     )
                 else:
                     raise ValueError(f"Unsupported order mode: {mode}")
@@ -84,14 +86,19 @@ class Calendar:
                     grouped[task.status.name].append(task)
                 case "priority":
                     grouped[task.priority].append(task)
-                case "deadline_day" | "deadline_week" | "deadline_month" | "deadline_year":
+                case (
+                    "deadline_day"
+                    | "deadline_week"
+                    | "deadline_month"
+                    | "deadline_year"
+                ):
                     deadline_mode = mode.split("_")[-1]
                     grouped[match_deadline(task.deadline, deadline_mode)].append(task)
                 case "categories_quantity":
                     grouped[len(task.categories or [])].append(task)
                 case "notifications_quantity":
                     grouped[len(task.notifications or [])].append(task)
-                case "categories" | "notifications"| "deadline":
+                case "categories" | "notifications" | "deadline":
                     raise ValueError(f"Unsupported group mode: {mode}")
                 case _:
                     # Default case: Attempt to group by any valid task attribute
@@ -104,7 +111,6 @@ class Calendar:
 
     @staticmethod
     def filter_by_attribute(tasks: List[Task], mode: str, target) -> List[Task]:
-
         def match_deadline(date: datetime, mode: str, target: datetime) -> bool:
             match mode:
                 case "year":
@@ -118,7 +124,6 @@ class Calendar:
                 case _:
                     raise ValueError(f"Unsupported mode: {mode}")
 
-
         match mode:
             case "category":
                 return [
@@ -127,17 +132,22 @@ class Calendar:
                     if any(category == target for category in task.categories)
                 ]
             case "categories_quantity" | "notifications_quantity":
-                return [task for task in tasks if len(getattr(task, mode.split("_")[0])) == target]
+                return [
+                    task
+                    for task in tasks
+                    if len(getattr(task, mode.split("_")[0])) == target
+                ]
             case "deadline_day" | "deadline_week" | "deadline_month" | "deadline_year":
                 deadline_mode = mode.split("_")[-1]
 
                 return [
                     task
                     for task in tasks
-                    if match_deadline(date=task.deadline, mode=deadline_mode, target=target)
-
+                    if match_deadline(
+                        date=task.deadline, mode=deadline_mode, target=target
+                    )
                 ]
-            case "categories" | "notifications"| "deadline":
+            case "categories" | "notifications" | "deadline":
                 raise ValueError(f"Unsupported group mode: {mode}")
             case _:
                 # Default case: Check if mode is a valid Task attribute and filter dynamically
