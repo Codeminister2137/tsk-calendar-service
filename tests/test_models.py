@@ -1,9 +1,10 @@
+import copy
 import random
 from datetime import datetime, timedelta
 
 import pytest
 
-from calendar_app.models import Category, Status, Task
+from calendar_app.models import Status, Task
 
 example_task_list = [
         Task(
@@ -13,7 +14,7 @@ example_task_list = [
             deadline=datetime(2025, 4, 25),
             priority=2,
             status=Status.INIT,
-            categories=[Category(name="boring"), Category(name="short")],
+            categories=["boring", "short"],
             notifications=[datetime(2025, 4, 25, 18,30), datetime(2025, 4, 24, 19,30)]
         ),
         Task(
@@ -23,7 +24,7 @@ example_task_list = [
             deadline=datetime(2025, 3, 30),
             priority=3,
             status=Status.PENDING,
-            categories=[Category(name="fun"), Category(name="short")],
+            categories=["fun", "short"],
             notifications=[datetime(2025, 2, 25, 18,30)]
         ),
         Task(
@@ -33,7 +34,7 @@ example_task_list = [
             deadline=datetime(2025, 3, 27),
             priority=1,
             status=Status.FINISHED,
-            categories=[Category(name="meeting")],
+            categories=["meeting"],
             notifications=[datetime(2025, 2, 20, 18,30),datetime(2025, 2, 20, 18,35),datetime(2025, 2, 25, 18,40)]
         ),
         Task(
@@ -44,7 +45,7 @@ def random_task():
     name = f"Task {random.randint(1, 100)}"
     expected_duration = timedelta(hours=random.randint(1, 10))
     actual_duration = timedelta(hours=random.randint(1, 10))
-    categories = [Category(name=random.choice(["Work", "Urgent", "Personal", "Other"]))]
+    categories = [random.choice(["Work", "Urgent", "Personal", "Other"])]
     deadline = datetime.now() + timedelta(days=random.randint(1, 365))
     priority = random.randint(1, 10)
     notifications = [datetime.now() + timedelta(days=random.randint(1, 365)) for _ in range(random.randint(1, 5))]
@@ -66,7 +67,7 @@ def random_task():
 @pytest.fixture
 def setup_teardown():
     # Setup: Create a new example tasks list
-    example_tasks = example_task_list
+    example_tasks = copy.deepcopy(example_task_list)
     yield example_tasks
     # Teardown: Clear the tasks list to ensure data is not shared between tests
     del example_tasks

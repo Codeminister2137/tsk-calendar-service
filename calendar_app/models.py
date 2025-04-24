@@ -6,16 +6,11 @@ from .enums import Status
 
 
 @dataclass
-class Category:
-    name: str
-
-
-@dataclass
 class Task:
     name: str
     expected_duration: timedelta = timedelta(minutes=0)
     actual_duration: timedelta = timedelta(minutes=0)
-    categories: List[Category] = field(default_factory=list)
+    categories: List[str] = field(default_factory=list)
     deadline: datetime = field(default_factory=lambda: datetime.max)
     priority: int = 1
     notifications: List[datetime] = field(default_factory=list)

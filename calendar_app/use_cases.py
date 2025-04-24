@@ -62,21 +62,37 @@ class Calendar:
     def group_by_attribute(tasks: List[Task], mode: str) -> Dict[str, List[Task]]:
         grouped = defaultdict(list)
 
+        def match_deadline(date: datetime, mode: str) -> str:
+            match mode:
+                case "year":
+                    return str(date.year)
+                case "month":
+                    return f"{date.year}-{date.month}"
+                case "week":
+                    return str(date.isocalendar()[:2])
+                case "day":
+                    return str(date.date())
+                case _:
+                    raise ValueError(f"Unsupported mode: {mode}")
+
         for task in tasks:
             match mode:
                 case "category":
                     for category in task.categories or []:
-                        grouped[category.name].append(task)
+                        grouped[category].append(task)
                 case "status":
                     grouped[task.status.name].append(task)
                 case "priority":
                     grouped[task.priority].append(task)
-                case "deadline":
-                    grouped[task.deadline.date()].append(task)
+                case "deadline_day" | "deadline_week" | "deadline_month" | "deadline_year":
+                    deadline_mode = mode.split("_")[-1]
+                    grouped[match_deadline(task.deadline, deadline_mode)].append(task)
                 case "categories_quantity":
                     grouped[len(task.categories or [])].append(task)
                 case "notifications_quantity":
                     grouped[len(task.notifications or [])].append(task)
+                case "categories" | "notifications"| "deadline":
+                    raise ValueError(f"Unsupported group mode: {mode}")
                 case _:
                     # Default case: Attempt to group by any valid task attribute
                     if hasattr(task, mode):
@@ -108,7 +124,7 @@ class Calendar:
                 return [
                     task
                     for task in tasks
-                    if any(cat.name == target for cat in task.categories)
+                    if any(category == target for category in task.categories)
                 ]
             case "categories_quantity" | "notifications_quantity":
                 return [task for task in tasks if len(getattr(task, mode.split("_")[0])) == target]
@@ -121,6 +137,8 @@ class Calendar:
                     if match_deadline(date=task.deadline, mode=deadline_mode, target=target)
 
                 ]
+            case "categories" | "notifications"| "deadline":
+                raise ValueError(f"Unsupported group mode: {mode}")
             case _:
                 # Default case: Check if mode is a valid Task attribute and filter dynamically
                 if hasattr(tasks[0], mode):  # Ensure tasks list is not empty
@@ -130,22 +148,3 @@ class Calendar:
                     return [task for task in tasks if getattr(task, mode) == target]
                 else:
                     raise ValueError(f"Unsupported filter mode: {mode}")
-
-
-if __name__ == "__main__":
-    calendar = Calendar()
-    task1 = Task(
-        name="Task 1", expected_duration=timedelta(hours=1), deadline=datetime.now()
-    )
-    task2 = Task(
-        name="Task 2",
-        expected_duration=timedelta(hours=2),
-        deadline=datetime(2025, 3, 31),
-    )
-    calendar.add_task(task1)
-    calendar.add_task(task2)
-    print(
-        calendar.filter_by_attribute(
-            target=datetime.now(), tasks=calendar.tasks, mode="deadline_month"
-        )
-    )
