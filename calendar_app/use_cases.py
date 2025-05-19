@@ -6,8 +6,12 @@ from calendar_app.models import Task
 
 
 class Calendar:
-    def __init__(self):
-        self.tasks: List[Task] = []
+    tasks = []
+
+    def __new__(cls):
+        if not hasattr(cls, "instance"):
+            cls.instance = super(Calendar, cls).__new__(cls)
+        return cls.instance
 
     def add_task(self, task: Task):
         self.tasks.append(task)
@@ -31,7 +35,7 @@ class Calendar:
 
     @staticmethod
     def get_most_important_task(tasks: List[Task]) -> Task:
-        return max(tasks, key=lambda task: task.priority, default=None)
+        return max(tasks, key=lambda task: task.priority.value, default=None)
 
     @staticmethod
     def order_by_attribute(tasks: List[Task], mode: str, reverse=True) -> List[Task]:
@@ -47,6 +51,10 @@ class Calendar:
             case "status":
                 return sorted(
                     tasks, key=lambda task: task.status.value, reverse=reverse
+                )
+            case "priority":
+                return sorted(
+                    tasks, key=lambda task: task.priority.value, reverse=reverse
                 )
             case "categories" | "notifications":
                 raise ValueError(f"Unsupported order mode: {mode}")
@@ -85,7 +93,7 @@ class Calendar:
                 case "status":
                     grouped[task.status.name].append(task)
                 case "priority":
-                    grouped[task.priority].append(task)
+                    grouped[task.priority.name].append(task)
                 case (
                     "deadline_day"
                     | "deadline_week"

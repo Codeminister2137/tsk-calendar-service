@@ -1,47 +1,24 @@
+import json
 import random
 from datetime import datetime, timedelta
 
-from calendar_app.models import Status, Task
+from calendar_app.models import Priority, Status, Task
+from calendar_app.serializers import TaskJsonInputSerializer
 
-example_task_list = [
-    Task(
-        name="homework",
-        expected_duration=timedelta(hours=1),
-        actual_duration=timedelta(hours=2),
-        deadline=datetime(2025, 4, 25),
-        priority=2,
-        status=Status.INIT,
-        categories=["boring", "short"],
-        notifications=[datetime(2025, 4, 25, 18, 30), datetime(2025, 4, 24, 19, 30)],
-    ),
-    Task(
-        name="dogwalk",
-        expected_duration=timedelta(hours=2),
-        actual_duration=timedelta(hours=2),
-        deadline=datetime(2025, 3, 30),
-        priority=3,
-        status=Status.PENDING,
-        categories=["fun", "short"],
-        notifications=[datetime(2025, 2, 25, 18, 30)],
-    ),
-    Task(
-        name="project meeting",
-        expected_duration=timedelta(hours=3),
-        actual_duration=timedelta(hours=2, minutes=15),
-        deadline=datetime(2025, 3, 27),
-        priority=1,
-        status=Status.FINISHED,
-        categories=["meeting"],
-        notifications=[
-            datetime(2025, 2, 20, 18, 30),
-            datetime(2025, 2, 20, 18, 35),
-            datetime(2025, 2, 25, 18, 40),
-        ],
-    ),
-    Task(
-        name="Empty task",
-    ),
-]
+EXAMPLE_TASK_LIST = []
+
+
+def load_file():
+    with open("tests/example_task_list.json", "r") as f:
+        data = json.load(f)
+        global EXAMPLE_TASK_LIST
+        for task in data:
+            new_task = TaskJsonInputSerializer(data=task)
+            new_task.is_valid(raise_exception=True)
+            validated_data = new_task.validated_data
+            EXAMPLE_TASK_LIST.append(
+                Task(status=Status(validated_data["status"][0]), **validated_data)
+            )
 
 
 def random_task():
@@ -50,7 +27,7 @@ def random_task():
     actual_duration = timedelta(hours=random.randint(1, 10))
     categories = [random.choice(["Work", "Urgent", "Personal", "Other"])]
     deadline = datetime.now() + timedelta(days=random.randint(1, 365))
-    priority = random.randint(1, 10)
+    priority = random.choice(list(Priority))
     notifications = [
         datetime.now() + timedelta(days=random.randint(1, 365))
         for _ in range(random.randint(1, 5))
@@ -67,3 +44,7 @@ def random_task():
         notifications=notifications,
         status=status,
     )
+
+
+if __name__ == "__main__":
+    load_file()
