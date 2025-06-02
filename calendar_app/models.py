@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Union
 
 from .enums import Priority, Status
@@ -11,7 +11,9 @@ class Task:
     expected_duration: timedelta = timedelta(minutes=0)
     actual_duration: timedelta = timedelta(minutes=0)
     categories: List[str] = field(default_factory=list)
-    deadline: datetime = field(default_factory=lambda: datetime.max)
+    deadline: datetime = field(
+        default_factory=lambda: datetime.max.replace(tzinfo=timezone.utc)
+    )
     priority: Priority = Priority.MEDIUM
     notifications: List[datetime] = field(default_factory=list)
     status: Status = Status.INIT

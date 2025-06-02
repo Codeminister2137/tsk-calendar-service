@@ -7,6 +7,8 @@ from calendar_app.models import Task
 
 class Calendar:
     tasks = []
+    excluded_order_modes = frozenset([])
+    excluded_group_modes = frozenset(["deadline"])
 
     def __new__(cls):
         if not hasattr(cls, "instance"):
@@ -34,11 +36,24 @@ class Calendar:
             raise ValueError("Task not found in list")
 
     @staticmethod
+    def map_mode(mode: str) -> str:
+        mapper = {
+            "deadline_day": "deadline",
+            "deadline_week": "deadline",
+            "deadline_month": "deadline",
+            "deadline_year": "deadline",
+            "notifications": "notifications_quantity",
+            "categories": "categories_quantity",
+        }
+        return mapper[mode] if mode in mapper else mode
+
+    @staticmethod
     def get_most_important_task(tasks: List[Task]) -> Task:
         return max(tasks, key=lambda task: task.priority.value, default=None)
 
-    @staticmethod
-    def order_by_attribute(tasks: List[Task], mode: str, reverse=True) -> List[Task]:
+    def order_by_attribute(
+        self, tasks: List[Task], mode: str, reverse=True
+    ) -> List[Task]:
         match mode:
             case "categories_quantity":
                 return sorted(
@@ -56,20 +71,19 @@ class Calendar:
                 return sorted(
                     tasks, key=lambda task: task.priority.value, reverse=reverse
                 )
-            case "categories" | "notifications":
-                raise ValueError(f"Unsupported order mode: {mode}")
             case _:
-                if hasattr(tasks[0], mode):
+                if hasattr(tasks[0], mode) and mode not in self.excluded_order_modes:
                     return sorted(
                         tasks,
                         key=lambda task: getattr(task, mode, None),
                         reverse=reverse,
                     )
+                elif mode in self.excluded_order_modes:
+                    raise ValueError(f"Banned order mode: {mode}")
                 else:
                     raise ValueError(f"Unsupported order mode: {mode}")
 
-    @staticmethod
-    def group_by_attribute(tasks: List[Task], mode: str) -> Dict[str, List[Task]]:
+    def group_by_attribute(self, tasks: List[Task], mode: str) -> Dict[str, List[Task]]:
         grouped = defaultdict(list)
 
         def match_deadline(date: datetime, mode: str) -> str:
@@ -106,14 +120,18 @@ class Calendar:
                     grouped[len(task.categories or [])].append(task)
                 case "notifications_quantity":
                     grouped[len(task.notifications or [])].append(task)
-                case "categories" | "notifications" | "deadline":
-                    raise ValueError(f"Unsupported group mode: {mode}")
                 case _:
                     # Default case: Attempt to group by any valid task attribute
-                    if hasattr(task, mode):
+                    if hasattr(task, mode) and mode not in self.excluded_order_modes:
                         grouped[getattr(task, mode)].append(task)
+                    elif mode in self.excluded_group_modes:
+                        raise ValueError(f"Banned group mode: {mode}")
                     else:
                         raise ValueError(f"Unsupported group mode: {mode}")
+
+        for item in grouped:
+            mode = self.map_mode(mode)
+            grouped[item] = self.order_by_attribute(grouped[item], mode, reverse=True)
 
         return grouped
 

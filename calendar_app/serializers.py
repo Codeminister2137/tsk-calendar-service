@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from calendar_app.enums import Priority, Status
+from calendar_app.fields import EnumField
 
 
 class TaskJsonInputSerializer(serializers.Serializer):
@@ -9,11 +10,9 @@ class TaskJsonInputSerializer(serializers.Serializer):
     actual_duration = serializers.DurationField(required=False)
     categories = serializers.ListField(required=False)
     deadline = serializers.DateTimeField(required=False)
-    priority = serializers.ChoiceField(
-        choices=[(priority.value, priority.name) for priority in Priority],
+    priority = EnumField(
+        Priority,
         required=False,
     )
     notifications = serializers.ListField(required=False)
-    status = serializers.ChoiceField(
-        choices=[(status.value, status.name) for status in Status], required=False
-    )
+    status = EnumField(Status, required=False)

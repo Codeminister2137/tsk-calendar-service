@@ -12,13 +12,12 @@ def load_file():
     with open("tests/example_task_list.json", "r") as f:
         data = json.load(f)
         global EXAMPLE_TASK_LIST
-        for task in data:
-            new_task = TaskJsonInputSerializer(data=task)
-            new_task.is_valid(raise_exception=True)
-            validated_data = new_task.validated_data
-            EXAMPLE_TASK_LIST.append(
-                Task(status=Status(validated_data["status"][0]), **validated_data)
-            )
+        for task_data in data:
+            serializer = TaskJsonInputSerializer(data=task_data)
+            serializer.is_valid(raise_exception=True)
+            task = Task(**serializer.validated_data)
+
+            EXAMPLE_TASK_LIST.append(task)
 
 
 def random_task():

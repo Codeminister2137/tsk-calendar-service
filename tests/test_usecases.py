@@ -1,6 +1,7 @@
 import copy
 import random
 from collections import defaultdict
+from unittest.mock import patch
 
 import pytest
 
@@ -201,16 +202,15 @@ class TestOrderByAttribute:
         assert actual_value == expected_value
 
     def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self):
-        mode = "categories"
-        with pytest.raises(ValueError):
-            self.calendar.order_by_attribute(
-                self.example_tasks, mode=mode, reverse=True
-            )
-        mode = "notifications"
-        with pytest.raises(ValueError):
-            self.calendar.order_by_attribute(
-                self.example_tasks, mode=mode, reverse=True
-            )
+        with patch(
+            "calendar_app.use_cases.Calendar.excluded_order_modes"
+        ) as mock_order_by_attribute:
+            mock_order_by_attribute.return_value = ["abc"]
+            mode = "abc"
+            with pytest.raises(ValueError):
+                self.calendar.order_by_attribute(
+                    self.example_tasks, mode=mode, reverse=True
+                )
 
     def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(
         self,
@@ -343,15 +343,9 @@ class TestGroupByAttribute:
         assert actual_value == expected_value
 
     def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self):
-        mode = "categories"
-        with pytest.raises(ValueError):
-            self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        mode = "notifications"
-        with pytest.raises(ValueError):
-            self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        mode = "deadline"
-        with pytest.raises(ValueError):
-            self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+        for mode in Calendar.excluded_group_modes:
+            with pytest.raises(ValueError):
+                self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
 
     def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(
         self,
