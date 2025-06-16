@@ -44,7 +44,7 @@ example_task_list = [
 ]
 
 
-def random_task():
+def random_task() -> Task:
     name = f"Task {random.randint(1, 100)}"
     expected_duration = timedelta(hours=random.randint(1, 10))
     actual_duration = timedelta(hours=random.randint(1, 10))
