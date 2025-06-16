@@ -2,13 +2,13 @@ import copy
 
 import pytest
 
-from tests.conf import example_task_list, random_task
+from tests.conf import EXAMPLE_TASK_LIST, random_task
 
 
 @pytest.fixture
 def setup_teardown():
     # Setup: Create a new example tasks list
-    example_tasks = copy.deepcopy(example_task_list)
+    example_tasks = copy.deepcopy(EXAMPLE_TASK_LIST)
     yield example_tasks
     # Teardown: Clear the tasks list to ensure data is not shared between tests
     del example_tasks
@@ -27,7 +27,7 @@ class TestModifyTask:
         new_task = random_task()
         updates = {"priority": new_task.priority}
         task.modify(updates)
-        assert task.priority == new_task.priority
+        assert task.priority.name == new_task.priority.name
 
     def test_modify_task_status(self, setup_teardown):
         task = random_task()

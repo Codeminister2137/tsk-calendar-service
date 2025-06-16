@@ -1,0 +1,52 @@
+[
+  {
+    "name": "homework",
+    "expected_duration": 3600,
+    "actual_duration": 7200,
+    "deadline": "2025-04-25T00:00:00",
+    "priority": 4,
+    "status": 0,
+    "categories": [
+      "boring",
+      "short"
+    ],
+    "notifications": [
+      "2025-04-25T18:30:00",
+      "2025-04-24T19:30:00"
+    ]
+  },
+  {
+    "name": "dogwalk",
+    "expected_duration": 7200,
+    "actual_duration": 7200,
+    "deadline": "2025-03-30T00:00:00",
+    "priority": 3,
+    "status": 1,
+    "categories": [
+      "fun",
+      "short"
+    ],
+    "notifications": [
+      "2025-02-25T18:30:00"
+    ]
+  },
+  {
+    "name": "project meeting",
+    "expected_duration": 10800,
+    "actual_duration": 8100,
+    "deadline": "2025-03-27T00:00:00",
+    "priority": 5,
+    "status": 2,
+    "categories": [
+      "meeting"
+    ],
+    "notifications": [
+      "2025-02-20T18:30:00",
+      "2025-02-20T18:35:00",
+      "2025-02-25T18:40:00"
+    ]
+  },
+  {
+    "name": "Empty task"
+  }
+]
