@@ -44,6 +44,7 @@ class Calendar:
             "deadline_year": "deadline",
             "notifications": "notifications_quantity",
             "categories": "categories_quantity",
+            "category": "name",
         }
         return mapper[mode] if mode in mapper else mode
 
@@ -122,10 +123,10 @@ class Calendar:
                     grouped[len(task.notifications or [])].append(task)
                 case _:
                     # Default case: Attempt to group by any valid task attribute
-                    if hasattr(task, mode) and mode not in self.excluded_order_modes:
-                        grouped[getattr(task, mode)].append(task)
-                    elif mode in self.excluded_group_modes:
+                    if mode in self.excluded_group_modes:
                         raise ValueError(f"Banned group mode: {mode}")
+                    elif hasattr(task, mode) and mode not in self.excluded_order_modes:
+                        grouped[getattr(task, mode)].append(task)
                     else:
                         raise ValueError(f"Unsupported group mode: {mode}")
 

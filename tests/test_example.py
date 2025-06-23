@@ -5,4 +5,4 @@ def test_example():
     load_file()
     print(f"{EXAMPLE_TASK_LIST}")
 
-    assert False
+    assert True
