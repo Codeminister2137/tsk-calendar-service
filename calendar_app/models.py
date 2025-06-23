@@ -1,3 +1,42 @@
-from django.db import models
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Tuple
 
-# Create your models here.
+from .enums import Priority, Status
+
+
+@dataclass
+class Task:
+    name: str
+    expected_duration: timedelta = timedelta(minutes=0)
+    actual_duration: timedelta = timedelta(minutes=0)
+    categories: List[str] = field(default_factory=list)
+    deadline: datetime = field(
+        default_factory=lambda: datetime.max.replace(tzinfo=timezone.utc)
+    )
+    priority: Priority = Priority.MEDIUM
+    notifications: List[datetime] = field(default_factory=list)
+    status: Status = Status.INIT
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def get_attribute_tuple(cls) -> Tuple:
+        return tuple(
+            attribute
+            for attribute in dir(cls)
+            if not callable(getattr(cls, attribute)) and not attribute.startswith("__")
+        )
+
+    def modify(self, updates: Dict[str, any]) -> None:
+        """
+        Modify the task instance by updating its attributes based on the provided dictionary of new values.
+
+        :param updates: Dictionary of attributes to update (e.g., {"name": "New Name", "priority": 1}).
+        """
+        for key, value in updates.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"Task has no attribute '{key}'")
