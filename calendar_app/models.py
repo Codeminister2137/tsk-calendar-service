@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple
 
 from .enums import Priority, Status
 
@@ -22,7 +22,7 @@ class Task:
         return self.name
 
     @classmethod
-    def get_attribute_tuple(cls):
+    def get_attribute_tuple(cls) -> Tuple:
         return tuple(
             attribute
             for attribute in dir(cls)

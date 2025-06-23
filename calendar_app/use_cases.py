@@ -1,6 +1,7 @@
+from calendar import Calendar
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List
 
 from calendar_app.models import Task
 
@@ -10,16 +11,16 @@ class Calendar:
     excluded_order_modes = frozenset([])
     excluded_group_modes = frozenset(["deadline"])
 
-    def __new__(cls):
+    def __new__(cls) -> Calendar:
         if not hasattr(cls, "instance"):
             cls.instance = super(Calendar, cls).__new__(cls)
         return cls.instance
 
-    def add_task(self, task: Task):
+    def add_task(self, task: Task) -> None:
         self.tasks.append(task)
 
     @staticmethod
-    def modify_task(task_id: int, tasks: List[Task], updates):
+    def modify_task(task_id: int, tasks: List[Task], updates) -> Task:
         """
         Modify a task in the provided list of tasks based on its index and update the provided attributes.
 
