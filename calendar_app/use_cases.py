@@ -1,7 +1,7 @@
 from calendar import Calendar
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from calendar_app.models import Task
 
@@ -20,7 +20,7 @@ class Calendar:
         self.tasks.append(task)
 
     @staticmethod
-    def modify_task(task_id: int, tasks: List[Task], updates) -> Task:
+    def modify_task(task_id: int, tasks: List[Task], updates: Dict[str, any]) -> Task:
         """
         Modify a task in the provided list of tasks based on its index and update the provided attributes.
 
@@ -54,7 +54,7 @@ class Calendar:
         return max(tasks, key=lambda task: task.priority.value, default=None)
 
     def order_by_attribute(
-        self, tasks: List[Task], mode: str, reverse=True
+        self, tasks: List[Task], mode: str, reverse: bool = True
     ) -> List[Task]:
         match mode:
             case "categories_quantity":
@@ -138,7 +138,9 @@ class Calendar:
         return grouped
 
     @staticmethod
-    def filter_by_attribute(tasks: List[Task], mode: str, target) -> List[Task]:
+    def filter_by_attribute(
+        tasks: List[Task], mode: str, target: Union[str, int, datetime]
+    ) -> List[Task]:
         def match_deadline(date: datetime, mode: str, target: datetime) -> bool:
             match mode:
                 case "year":
