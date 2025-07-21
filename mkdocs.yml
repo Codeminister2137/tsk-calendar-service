@@ -1,0 +1,13 @@
+site_name: "My Library"
+
+theme:
+  name: "material"
+plugins:
+- search
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        options.extra:
+          show_default_value: false
+          docstring_style: google  # or numpy
