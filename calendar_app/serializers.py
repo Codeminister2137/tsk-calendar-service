@@ -8,7 +8,7 @@ class TaskJsonInputSerializer(serializers.Serializer):
     """
     Serializer for validating and deserializing JSON input when creating or updating a Task.
 
-    Fields:
+    Attributes:
         name (str): Required. The name/title of the task (max length 255).
         expected_duration (timedelta): Optional. Estimated time to complete the task.
         actual_duration (timedelta): Optional. Time actually spent on the task.

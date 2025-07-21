@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -12,7 +12,7 @@ class Task(models.Model):
     """
     Represents a task with metadata such as name, durations, categories, deadlines, priority, and status.
 
-    Fields:
+    Attributes:
         name (str): Required. A short descriptive name for the task (max 120 characters).
         expected_duration (timedelta): Optional. Estimated time expected to complete the task.
         actual_duration (timedelta): Optional. Actual time spent on the task.
@@ -66,12 +66,12 @@ class Task(models.Model):
         return self.name
 
     @classmethod
-    def get_attribute_tuple(cls):
+    def get_attribute_tuple(cls) -> Tuple[str, ...]:
         """
         Return a tuple of class-level attributes.
 
         Returns:
-            Tuple[str, ...]: A tuple of attribute names.
+            Tuple[str, ...] (Tuple[Any]): A tuple of attribute names.
 
         Examples:
             >>> Task.get_attribute_tuple()

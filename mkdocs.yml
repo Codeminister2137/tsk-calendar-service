@@ -2,12 +2,35 @@ site_name: "My Library"
 
 theme:
   name: "material"
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.instant
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
 plugins:
 - search
 - mkdocstrings:
     default_handler: python
     handlers:
       python:
+        options:
+          show_root_toc_entry: false
         options.extra:
           show_default_value: false
           docstring_style: google  # or numpy
+markdown_extensions:
+    toc:
+        permalink: "¤"
+        separator: "_"

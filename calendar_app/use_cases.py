@@ -226,7 +226,7 @@ class Calendar:
         Args:
             tasks (List[Task]): The list of tasks to filter.
             mode (str): The filtering mode (attribute name or alias).
-            target: The value to match against.
+            target (Any): The value to match against.
 
         Returns:
             List[Task]: List of tasks matching the filter criteria.

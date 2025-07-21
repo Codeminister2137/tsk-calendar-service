@@ -11,7 +11,7 @@ class EnumField(serializers.ChoiceField):
 
     Args:
         enum_class (Enum): The Python Enum class to bind to the field.
-        **kwargs: Additional keyword arguments passed to `ChoiceField`.
+        **kwargs (Any): Additional keyword arguments passed to `ChoiceField`.
 
     Methods:
         to_internal_value(data): Converts incoming value (str/int) to Enum instance.
@@ -42,7 +42,7 @@ class EnumField(serializers.ChoiceField):
             data (Any): The value received in the incoming request (e.g., form or JSON data).
 
         Returns:
-            Enum: The corresponding Enum instance (e.g., Priority.HIGH).
+            Enum (Enum): The corresponding Enum instance (e.g., Priority.HIGH).
 
         Raises:
             ValidationError: If the input value is not a valid choice.
@@ -63,7 +63,7 @@ class EnumField(serializers.ChoiceField):
             obj (Enum): The Enum instance to serialize.
 
         Returns:
-            Any: The `.value` of the Enum (e.g., int or str), used in serialized output.
+            Any (str): The `.value` of the Enum (e.g., int or str), used in serialized output.
 
         Examples:
             >>> from calendar_app.enums import Priority
