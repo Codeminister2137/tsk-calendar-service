@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -32,7 +32,7 @@ class Task(models.Model):
         return self.name
 
     @classmethod
-    def get_attribute_tuple(cls):
+    def get_attribute_tuple(cls) -> Tuple:
         return tuple(
             attribute
             for attribute in dir(cls)

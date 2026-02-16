@@ -13,17 +13,15 @@ from tests.conf import EXAMPLE_TASK_LIST, random_task
 
 @pytest.fixture
 def setup_teardown():
-    # Setup: Create a new Calendar instance and example tasks list
     calendar = Calendar()
     example_tasks = copy.deepcopy(EXAMPLE_TASK_LIST)
     yield calendar, example_tasks
-    # Teardown: Clear the tasks list to ensure data is not shared between tests
     calendar.tasks = []
 
 
 class TestSetupTeardown:
     def test_should_yield_calendar_with_empty_task_list(self, setup_teardown):
-        calendar, example_tasks = setup_teardown
+        calendar, _ = setup_teardown
         assert len(calendar.tasks) == 0
 
 
@@ -40,16 +38,12 @@ class TestAddTask:
     def test_should_add_correct_task_to_list(self):
         task = random_task()
         self.calendar.add_task(task)
-        expected_value = task
-        actual_value = self.calendar.tasks[0]
-        assert expected_value == actual_value
+        assert task == self.calendar.tasks[0]
 
     def test_should_add_correct_task_with_correct_data_to_list(self):
         task = random_task()
         self.calendar.add_task(task)
-        expected_value = task.__repr__()
-        actual_value = self.calendar.tasks[0].__repr__()
-        assert expected_value == actual_value
+        assert task.__repr__() == self.calendar.tasks[0].__repr__()
 
 
 class TestModifyTask:
@@ -57,38 +51,39 @@ class TestModifyTask:
     def class_setup(self, setup_teardown):
         self.calendar, self.example_tasks = setup_teardown
         self.calendar.tasks = []
-        self.tasks = self.calendar.tasks
         for task in self.example_tasks:
             self.calendar.add_task(task)
-        self.chosen_task_id = random.randint(0, len(self.tasks) - 1)
+        self.chosen_task_id = random.randint(0, len(self.calendar.tasks) - 1)
 
     def test_should_modify_correct_task(self):
-        chosen_task_id = self.chosen_task_id
-        expected_value = self.calendar.tasks[chosen_task_id].__repr__()
+        task_id = self.chosen_task_id
+        before = self.calendar.tasks[task_id].__repr__()
         self.calendar.modify_task(
-            task_id=chosen_task_id, tasks=self.tasks, updates=random_task().__dict__
+            task_id=task_id, tasks=self.calendar.tasks, updates=random_task().__dict__
         )
-        actual_value = self.calendar.tasks[chosen_task_id].__repr__()
-        assert expected_value != actual_value
+        after = self.calendar.tasks[task_id].__repr__()
+        assert before != after
 
     def test_should_not_modify_incorrect_task(self):
-        task_reproductions = [task.__repr__() for task in self.example_tasks]
-        chosen_task_id = self.chosen_task_id
+        before = [task.__repr__() for task in self.calendar.tasks]
         self.calendar.modify_task(
-            task_id=chosen_task_id, tasks=self.tasks, updates=random_task().__dict__
+            task_id=self.chosen_task_id,
+            tasks=self.calendar.tasks,
+            updates=random_task().__dict__,
         )
-        for id in range(len(self.tasks)):
-            if id != chosen_task_id:
-                assert self.tasks[id].__repr__() in task_reproductions
+        for i, task in enumerate(self.calendar.tasks):
+            if i != self.chosen_task_id:
+                assert task.__repr__() == before[i]
 
     def test_should_not_change_amount_of_tasks(self):
-        chosen_task_id = self.chosen_task_id
-        expected_value = len(self.tasks)
+        before = len(self.calendar.tasks)
         self.calendar.modify_task(
-            task_id=chosen_task_id, tasks=self.tasks, updates=random_task().__dict__
+            task_id=self.chosen_task_id,
+            tasks=self.calendar.tasks,
+            updates=random_task().__dict__,
         )
-        actual_value = len(self.tasks)
-        assert expected_value == actual_value
+        after = len(self.calendar.tasks)
+        assert before == after
 
 
 class TestGetMostImportantTask:
@@ -101,122 +96,55 @@ class TestGetMostImportantTask:
         self.calendar.tasks[self.chosen_task_id].priority = Priority.HIGHEST
 
     def test_should_return_task_with_highest_priority(self):
-        actual_value = self.calendar.get_most_important_task(
-            self.calendar.tasks
-        ).priority
-        expected_value = Priority.HIGHEST
-        assert actual_value == expected_value
+        task = self.calendar.get_most_important_task(self.calendar.tasks)
+        assert task.priority == Priority.HIGHEST
 
     def test_should_return_one_task(self):
         self.calendar.tasks.append(Task(name="example", priority=Priority.HIGHEST))
-        actual_value = self.calendar.get_most_important_task(self.calendar.tasks)
-        assert isinstance(actual_value, Task)
+        task = self.calendar.get_most_important_task(self.calendar.tasks)
+        assert isinstance(task, Task)
 
 
 class TestOrderByAttribute:
     @pytest.fixture(autouse=True)
     def class_setup(self, setup_teardown):
         self.calendar, self.example_tasks = setup_teardown
-        self.tasks = self.calendar.tasks
         for task in self.example_tasks:
             self.calendar.add_task(task)
 
-    def test_should_return_list_ordered_by_name(self):
-        mode = "name"
-        actual_value = self.calendar.order_by_attribute(
+    @pytest.mark.parametrize(
+        "mode, key",
+        [
+            ("name", lambda t: t.name),
+            ("expected_duration", lambda t: t.expected_duration),
+            ("actual_duration", lambda t: t.actual_duration),
+            ("deadline", lambda t: t.deadline),
+            ("priority", lambda t: t.priority.value),
+            ("status", lambda t: t.status.value),
+            ("categories_quantity", lambda t: len(t.categories)),
+            ("notifications_quantity", lambda t: len(t.notifications)),
+        ],
+    )
+    def test_should_return_list_ordered_by_attribute(self, mode, key):
+        actual = self.calendar.order_by_attribute(
             self.example_tasks, mode=mode, reverse=True
         )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.name, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_expected_duration(self):
-        mode = "expected_duration"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.expected_duration, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_actual_duration(self):
-        mode = "actual_duration"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.actual_duration, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_deadline(self):
-        mode = "deadline"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.deadline, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_priority(self):
-        mode = "priority"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.priority.value, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_status(self):
-        mode = "status"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: task.status.value, reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_categories_quantity(self):
-        mode = "categories_quantity"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: len(task.categories), reverse=True
-        )
-        assert actual_value == expected_value
-
-    def test_should_return_list_ordered_by_notifications_quantity(self):
-        mode = "notifications_quantity"
-        actual_value = self.calendar.order_by_attribute(
-            self.example_tasks, mode=mode, reverse=True
-        )
-        expected_value = sorted(
-            self.example_tasks, key=lambda task: len(task.notifications), reverse=True
-        )
-        assert actual_value == expected_value
+        expected = sorted(self.example_tasks, key=key, reverse=True)
+        assert actual == expected
 
     def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self):
         with patch(
-            "calendar_app.use_cases.Calendar.excluded_order_modes"
-        ) as mock_order_by_attribute:
-            mock_order_by_attribute.return_value = ["abc"]
-            mode = "abc"
+            "calendar_app.use_cases.Calendar.excluded_order_modes", return_value=["abc"]
+        ):
             with pytest.raises(ValueError):
                 self.calendar.order_by_attribute(
-                    self.example_tasks, mode=mode, reverse=True
+                    self.example_tasks, mode="abc", reverse=True
                 )
 
     def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(
         self,
     ):
-        random_name = random_task().name
-        mode = random_name
+        mode = random_task().name
         with pytest.raises(ValueError):
             self.calendar.order_by_attribute(
                 self.example_tasks, mode=mode, reverse=True
@@ -227,272 +155,121 @@ class TestGroupByAttribute:
     @pytest.fixture(autouse=True)
     def class_setup(self, setup_teardown):
         self.calendar, self.example_tasks = setup_teardown
-        self.tasks = self.calendar.tasks
         for task in self.example_tasks:
             self.calendar.add_task(task)
 
-    def test_should_return_dictionary_grouped_by_name(self):
-        mode = "name"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[task.name].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_expected_duration(self):
-        mode = "expected_duration"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[task.expected_duration].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_actual_duration(self):
-        mode = "actual_duration"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[task.actual_duration].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_deadline_year(self):
-        mode = "deadline_year"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[str(task.deadline.year)].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_deadline_month(self):
-        mode = "deadline_month"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[f"{task.deadline.year}-{task.deadline.month}"].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_deadline_week(self):
-        mode = "deadline_week"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[str(task.deadline.isocalendar()[:2])].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_deadline_day(self):
-        mode = "deadline_day"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[str(task.deadline.date())].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_priority(self):
-        mode = "priority"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[task.priority.name].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_status(self):
-        mode = "status"
-        actual_value = self.calendar.group_by_attribute(
-            tasks=self.calendar.tasks, mode=mode
-        )
-        expected_value = defaultdict(list)
+    @pytest.mark.parametrize(
+        "mode, group_key",
+        [
+            ("name", lambda t: t.name),
+            ("expected_duration", lambda t: t.expected_duration),
+            ("actual_duration", lambda t: t.actual_duration),
+            ("deadline_year", lambda t: str(t.deadline.year)),
+            ("deadline_month", lambda t: f"{t.deadline.year}-{t.deadline.month}"),
+            ("deadline_week", lambda t: str(t.deadline.isocalendar()[:2])),
+            ("deadline_day", lambda t: str(t.deadline.date())),
+            ("priority", lambda t: t.priority.name),
+            ("status", lambda t: t.status.name),
+            ("categories_quantity", lambda t: len(t.categories)),
+            ("notifications_quantity", lambda t: len(t.notifications)),
+        ],
+    )
+    def test_should_group_by_attribute(self, mode, group_key):
+        result = self.calendar.group_by_attribute(self.calendar.tasks, mode=mode)
+        expected = defaultdict(list)
         for task in self.calendar.tasks:
-            expected_value[task.status.name].append(task)
+            expected[group_key(task)].append(task)
+        assert result == expected
 
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_category(self):
-        mode = "category"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
+    def test_should_group_by_category(self):
+        result = self.calendar.group_by_attribute(self.calendar.tasks, mode="category")
+        expected = defaultdict(list)
+        for task in self.calendar.tasks:
             for category in task.categories:
-                expected_value[category].append(task)
+                expected[category].append(task)
+        assert result == expected
 
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_categories_quantity(self):
-        mode = "categories_quantity"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[len(task.categories)].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_return_dictionary_grouped_by_notifications_quantity(self):
-        mode = "notifications_quantity"
-        actual_value = self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-        expected_value = defaultdict(list)
-        for task in self.tasks:
-            expected_value[len(task.notifications)].append(task)
-
-        assert actual_value == expected_value
-
-    def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self):
+    def test_should_raise_value_error_on_unsupported_modes(self):
         for mode in Calendar.excluded_group_modes:
             with pytest.raises(ValueError):
-                self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
-
-    def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(
-        self,
-    ):
-        random_name = random_task().name
-        mode = random_name
+                self.calendar.group_by_attribute(self.calendar.tasks, mode=mode)
         with pytest.raises(ValueError):
-            self.calendar.group_by_attribute(tasks=self.tasks, mode=mode)
+            self.calendar.group_by_attribute(self.calendar.tasks, mode="nonexistent")
 
 
 class TestFilterByAttribute:
     @pytest.fixture(autouse=True)
     def class_setup(self, setup_teardown):
         self.calendar, self.example_tasks = setup_teardown
-        self.tasks = self.calendar.tasks
         for task in self.example_tasks:
             self.calendar.add_task(task)
         self.target_task = random_task()
         self.calendar.add_task(self.target_task)
 
-    def test_should_return_list_filtered_by_name(self):
-        mode = "name"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.name
+    @pytest.mark.parametrize(
+        "mode, attr",
+        [
+            ("name", lambda t: t.name),
+            ("expected_duration", lambda t: t.expected_duration),
+            ("actual_duration", lambda t: t.actual_duration),
+            ("deadline_year", lambda t: t.deadline),
+            ("deadline_month", lambda t: t.deadline),
+            ("deadline_week", lambda t: t.deadline),
+            ("deadline_day", lambda t: t.deadline),
+            ("priority", lambda t: t.priority.name),
+            ("status", lambda t: t.status.name),
+            ("notifications_quantity", lambda t: len(t.notifications)),
+            ("categories_quantity", lambda t: len(t.categories)),
+        ],
+    )
+    def test_should_filter_by_attribute(self, mode, attr):
+        target = attr(self.target_task)
+        results = self.calendar.filter_by_attribute(
+            self.calendar.tasks, mode=mode, target=target
         )
-        for task in actual_value:
-            assert task.name == self.target_task.name
+        for task in results:
+            if mode.startswith("deadline"):
+                if mode == "deadline_year":
+                    assert task.deadline.year == self.target_task.deadline.year
+                elif mode == "deadline_month":
+                    assert (
+                        task.deadline.year == self.target_task.deadline.year
+                        and task.deadline.month == self.target_task.deadline.month
+                    )
+                elif mode == "deadline_week":
+                    assert (
+                        task.deadline.isocalendar()[:2]
+                        == self.target_task.deadline.isocalendar()[:2]
+                    )
+                elif mode == "deadline_day":
+                    assert task.deadline.date() == self.target_task.deadline.date()
+            else:
+                assert attr(task) == target
 
-    def test_should_return_list_filtered_by_expected_duration(self):
-        mode = "expected_duration"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.expected_duration
+    def test_should_filter_by_category(self):
+        category = self.target_task.categories[0]
+        results = self.calendar.filter_by_attribute(
+            self.calendar.tasks, mode="category", target=category
         )
-        for task in actual_value:
-            assert task.expected_duration == self.target_task.expected_duration
+        for task in results:
+            assert category in task.categories
 
-    def test_should_return_list_filtered_by_actual_duration(self):
-        mode = "actual_duration"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.actual_duration
-        )
-        for task in actual_value:
-            assert task.actual_duration == self.target_task.actual_duration
-
-    def test_should_return_list_filtered_by_category(self):
-        mode = "category"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.categories[0]
-        )
-        for task in actual_value:
-            assert self.target_task.categories[0] in task.categories
-
-    def test_should_return_list_filtered_by_deadline_year(self):
-        mode = "deadline_year"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.deadline
-        )
-        for task in actual_value:
-            assert task.deadline.year == self.target_task.deadline.year
-
-    def test_should_return_list_filtered_by_deadline_month(self):
-        mode = "deadline_month"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.deadline
-        )
-        for task in actual_value:
-            assert (
-                task.deadline.year == self.target_task.deadline.year
-                and task.deadline.month == self.target_task.deadline.month
-            )
-
-    def test_should_return_list_filtered_by_deadline_week(self):
-        mode = "deadline_week"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.deadline
-        )
-        for task in actual_value:
-            assert (
-                task.deadline.isocalendar()[:2]
-                == self.target_task.deadline.isocalendar()[:2]
-            )
-
-    def test_should_return_list_filtered_by_deadline_day(self):
-        mode = "deadline_day"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.deadline
-        )
-        for task in actual_value:
-            assert task.deadline.date() == self.target_task.deadline.date()
-
-    def test_should_return_list_filtered_by_priority(self):
-        mode = "priority"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.priority.name
-        )
-        for task in actual_value:
-            assert task.priority.name == self.target_task.priority.name
-
-    def test_should_return_list_filtered_by_status(self):
-        mode = "status"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=self.target_task.status.name
-        )
-        for task in actual_value:
-            assert task.status.name == self.target_task.status.name
-
-    def test_should_return_list_filtered_by_notifications_quantity(self):
-        mode = "notifications_quantity"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=len(self.target_task.notifications)
-        )
-        for task in actual_value:
-            assert len(task.notifications) == len(self.target_task.notifications)
-
-    def test_should_return_list_filtered_by_categories_quantity(self):
-        mode = "categories_quantity"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target=len(self.target_task.categories)
-        )
-        for task in actual_value:
-            assert len(task.categories) == len(self.target_task.categories)
-
-    def test_should_raise_value_error_on_unsupported_mode_with_existing_attribute(self):
-        mode = "notifications"
+    def test_should_raise_value_error_on_unsupported_modes(self):
         with pytest.raises(ValueError):
             self.calendar.filter_by_attribute(
-                tasks=self.tasks, mode=mode, target=len(self.target_task.notifications)
+                self.calendar.tasks, mode="notifications", target=0
             )
-        mode = "categories"
         with pytest.raises(ValueError):
             self.calendar.filter_by_attribute(
-                tasks=self.tasks, mode=mode, target=len(self.target_task.notifications)
+                self.calendar.tasks, mode="categories", target=0
             )
-
-    def test_should_raise_value_error_on_unsupported_mode_without_existing_attribute(
-        self,
-    ):
-        mode = "wrong mode"
         with pytest.raises(ValueError):
             self.calendar.filter_by_attribute(
-                tasks=self.tasks, mode=mode, target=len(self.target_task.notifications)
+                self.calendar.tasks, mode="invalid_mode", target=0
             )
 
-    def test_should_return_empty_list_when_filtering_by_non_matching_target(self):
-        mode = "name"
-        actual_value = self.calendar.filter_by_attribute(
-            tasks=self.tasks, mode=mode, target="Absolutely nonexistant target"
+    def test_should_return_empty_list_when_no_match(self):
+        result = self.calendar.filter_by_attribute(
+            self.calendar.tasks, mode="name", target="Nonexistent Name"
         )
-        assert len(actual_value) == 0
-        assert isinstance(actual_value, list)
+        assert result == []

@@ -8,7 +8,7 @@ from calendar_app.serializers import TaskJsonInputSerializer
 EXAMPLE_TASK_LIST = []
 
 
-def load_file():
+def load_file() -> None:
     with open("tests/example_task_list.json", "r") as f:
         data = json.load(f)
         global EXAMPLE_TASK_LIST
