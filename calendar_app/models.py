@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -9,6 +9,40 @@ from .enums import Priority, Status
 
 
 class Task(models.Model):
+    """
+    Represents a task with metadata such as name, durations, categories, deadlines, priority, and status.
+
+    Attributes:
+        name (str): Required. A short descriptive name for the task (max 120 characters).
+        expected_duration (timedelta): Optional. Estimated time expected to complete the task.
+        actual_duration (timedelta): Optional. Actual time spent on the task.
+        categories (List[str]): Optional. Tags or labels associated with the task.
+        deadline (datetime): Optional. Deadline by which the task should be completed. Defaults to datetime.max.
+        priority (str): Optional. One of the enum values from `Priority` (e.g., "HIGH", "LOW").
+        notifications (List[datetime]): Optional. List of datetime objects when notifications should be triggered.
+        status (str): Optional. Current state of the task (e.g., "INIT", "TODO", "DONE") from `Status` enum.
+
+    Methods:
+        modify(updates: Dict[str, any]) -> None:
+            Update one or more attributes of the task instance.
+        get_attribute_tuple() -> Tuple[str, ...]:
+            Return a tuple of non-callable class-level attribute names.
+
+    Examples:
+        >>> task = Task.objects.create(
+        ...     name="Write documentation",
+        ...     expected_duration=timedelta(hours=2),
+        ...     categories=["writing", "work"],
+        ...     deadline=datetime(2025, 7, 22, 12, 0),
+        ...     priority="HIGH",
+        ...     notifications=[datetime(2025, 7, 22, 10, 0)],
+        ...     status="TODO"
+        ... )
+        >>> task.modify({"name": "Write final report", "priority": "MEDIUM"})
+        >>> print(task.name)
+        Write final report
+    """
+
     name = models.CharField(max_length=120)
     expected_duration = models.DurationField(default=timedelta(minutes=0))
     actual_duration = models.DurationField(default=timedelta(minutes=0))
@@ -32,7 +66,17 @@ class Task(models.Model):
         return self.name
 
     @classmethod
-    def get_attribute_tuple(cls) -> Tuple:
+    def get_attribute_tuple(cls) -> Tuple[str, ...]:
+        """
+        Return a tuple of class-level attributes.
+
+        Returns:
+            Tuple[str, ...] (Tuple[Any]): A tuple of attribute names.
+
+        Examples:
+            >>> Task.get_attribute_tuple()
+            ('actual_duration', 'categories', 'deadline', 'expected_duration', 'name', ...)
+        """
         return tuple(
             attribute
             for attribute in dir(cls)
@@ -41,9 +85,22 @@ class Task(models.Model):
 
     def modify(self, updates: Dict[str, any]) -> None:
         """
-        Modify the task instance by updating its attributes based on the provided dictionary of new values.
+        Modify the task instance by updating one or more attributes dynamically.
 
-        :param updates: Dictionary of attributes to update (e.g., {"name": "New Name", "priority": 1}).
+        Args:
+            updates (Dict[str, any]): A dictionary where each key is a Task field name
+                                      and each value is the new value to set.
+
+        Raises:
+            AttributeError: If any of the provided keys do not match existing Task attributes.
+
+        Examples:
+            >>> task = Task.objects.create(name="Old Name", priority="LOW")
+            >>> task.modify({"name": "New Name", "priority": "HIGH"})
+            >>> print(task.name)
+            New Name
+            >>> print(task.priority)
+            HIGH
         """
         for key, value in updates.items():
             if hasattr(self, key):
