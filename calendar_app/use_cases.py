@@ -1,6 +1,7 @@
+from calendar import Calendar
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import datetime
+from typing import Dict, List, Union
 
 from calendar_app.models import Task
 
@@ -10,16 +11,16 @@ class Calendar:
     excluded_order_modes = frozenset([])
     excluded_group_modes = frozenset(["deadline"])
 
-    def __new__(cls):
+    def __new__(cls) -> Calendar:
         if not hasattr(cls, "instance"):
             cls.instance = super(Calendar, cls).__new__(cls)
         return cls.instance
 
-    def add_task(self, task: Task):
+    def add_task(self, task: Task) -> None:
         self.tasks.append(task)
 
     @staticmethod
-    def modify_task(task_id: int, tasks: List[Task], updates) -> Task:
+    def modify_task(task_id: int, tasks: List[Task], updates: Dict[str, any]) -> Task:
         """
         Modify a task in the provided list of tasks based on its index and update the provided attributes.
 
@@ -68,6 +69,7 @@ class Calendar:
             "deadline_year": "deadline",
             "notifications": "notifications_quantity",
             "categories": "categories_quantity",
+            "category": "name",
         }
         return mapper[mode] if mode in mapper else mode
 
@@ -91,7 +93,7 @@ class Calendar:
         return max(tasks, key=lambda task: task.priority.value, default=None)
 
     def order_by_attribute(
-        self, tasks: List[Task], mode: str, reverse=True
+        self, tasks: List[Task], mode: str, reverse: bool = True
     ) -> List[Task]:
         """
         Order tasks based on a given attribute such as status, priority, or custom fields.
@@ -205,10 +207,10 @@ class Calendar:
                     grouped[len(task.notifications or [])].append(task)
                 case _:
                     # Default case: Attempt to group by any valid task attribute
-                    if hasattr(task, mode) and mode not in self.excluded_order_modes:
-                        grouped[getattr(task, mode)].append(task)
-                    elif mode in self.excluded_group_modes:
+                    if mode in self.excluded_group_modes:
                         raise ValueError(f"Banned group mode: {mode}")
+                    elif hasattr(task, mode) and mode not in self.excluded_order_modes:
+                        grouped[getattr(task, mode)].append(task)
                     else:
                         raise ValueError(f"Unsupported group mode: {mode}")
 
@@ -219,7 +221,9 @@ class Calendar:
         return grouped
 
     @staticmethod
-    def filter_by_attribute(tasks: List[Task], mode: str, target) -> List[Task]:
+    def filter_by_attribute(
+        tasks: List[Task], mode: str, target: Union[str, int, datetime]
+    ) -> List[Task]:
         """
         Filter tasks by a given attribute and target value (e.g. category, priority, deadline).
 
@@ -240,7 +244,7 @@ class Calendar:
             >>> Calendar.filter_by_attribute([task1, task2], "deadline_week", datetime(2025, 7, 21))
             [<Task: X>]
         """
-
+      
         def match_deadline(date: datetime, mode: str, target: datetime) -> bool:
             match mode:
                 case "year":
