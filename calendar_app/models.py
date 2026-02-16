@@ -2,21 +2,31 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 
+from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
 from .enums import Priority, Status
 
 
-@dataclass
-class Task:
-    name: str
-    expected_duration: timedelta = timedelta(minutes=0)
-    actual_duration: timedelta = timedelta(minutes=0)
-    categories: List[str] = field(default_factory=list)
+class Task(models.Model):
+    name = models.CharField(max_length=120)
+    expected_duration = models.DurationField(default=timedelta(minutes=0))
+    actual_duration = models.DurationField(default=timedelta(minutes=0))
+    categories = ArrayField(models.CharField(max_length=60), blank=True, default=list)
     deadline: datetime = field(
         default_factory=lambda: datetime.max.replace(tzinfo=timezone.utc)
     )
-    priority: Priority = Priority.MEDIUM
-    notifications: List[datetime] = field(default_factory=list)
-    status: Status = Status.INIT
+    priority = models.CharField(
+        max_length=20,
+        choices=[(priority.value, priority.name.title()) for priority in Priority],
+        default=Priority.MEDIUM.value,
+    )
+    notifications = ArrayField(models.DateTimeField(), blank=True, default=list)
+    status = models.CharField(
+        max_length=20,
+        choices=[(status.value, status.name.title()) for status in Status],
+        default=Status.INIT.value,
+    )
 
     def __str__(self):
         return self.name
